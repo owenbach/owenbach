@@ -50,9 +50,11 @@ public class ExperienceStep// : ScriptableObject
     public List<string> ReferencedString { get => referencedString; set => referencedString = value; }
     public enum ExperienceStepType
     {
+        // MISC Steps
         Null,
         MoveToRandomLocation,
-        ScanSurroundings,
+        // Memory Instance Steps
+        ScanSurroundingsForInstances,
         FindInstanceofEntityWithMemory,
         ExecuteFunctionInEntityMemory,
         MoveToInstanceofEntityInMemory,
@@ -60,8 +62,13 @@ public class ExperienceStep// : ScriptableObject
         AddGameObjectToInventory,
         RemoveGameObjectFromInventory,
         ExploreEntityMemoryFunctions,
+        // Memory Retrieval Steps
         GetMemoryWithPhysicalAttributeChange,
         GetMemoryWithTraitChange,
+        // Social Steps
+        FindSimulationConstructWithPhysicalAttributeChange,
+        FindSimulationConstructWithTraitChange,
+        // Self Aware Steps
         CompleteExperienceStepSequence
     }
     #endregion
@@ -84,15 +91,19 @@ public class ExperienceStep// : ScriptableObject
                     stepActor.DestinationReachedEvent.AddListener(ReachDestinationStepCompleteWithVector3);
                 }
                 break;
-            case ExperienceStepType.ScanSurroundings: // Intended to follow move to instance of entity in memory.
+            case ExperienceStepType.ScanSurroundingsForInstances: // Intended to follow move to instance of entity in memory.
                 // Optional GameObject input to remove instance from memories if not present in object vision or in inventory.
+                // Optional SimulationConstruct input in the event there are no instances within the associated memory.
                 // Capable of forcing the parented ExperienceStepSequence to recoil if the above conditons occur.
                 {
+                    // Get the view.
                     List<GameObject> actorView = stepActor.GameObjectView;
                     bool failedToFindInstance = false;
+
+                    // First default to GameObject Scan
                     if (stepActor.ConstructEntities.Count > 0)
                     {
-                        foreach (EntityMemory memory in stepActor.ConstructEntities)
+                        foreach (EntityMemory memory in referencedEntityMemory)
                         {
                             if (memory.InstancesInScene.Count == 0) continue;
                             List<GameObject> objectsToRemoveFromMemory = new List<GameObject>();
@@ -109,11 +120,35 @@ public class ExperienceStep// : ScriptableObject
                             foreach (GameObject subject in objectsToRemoveFromMemory)
                             {
                                 if (subject == null) continue;
+                                referencedVector3.Remove(memory.InstancesInScene[subject]);
                                 memory.InstancesInScene.Remove(subject);
                                 referencedGameObject.Remove(subject);
                             }
                         }
                     }
+
+                    // If there's a referenced simulation construct, use that.
+                    if (referencedSimulationConstruct.Count > 0)
+                    {
+                        bool guidanceRecieved = false;
+                        if (actorView.Contains(referencedSimulationConstruct[0].gameObject))
+                        {
+                            bool associateIsRelevant = false;
+                            foreach(EntityMemory memory in referencedEntityMemory)
+                            {
+                                if (memory.InstancesInScene.Count > 0) continue;
+                                var returnedInstances = referencedSimulationConstruct[0].RequestInstanceKnowledge(stepActor, memory.EntityType);
+                                if (returnedInstances == null) continue;
+                                if (returnedInstances.Count == 0) continue;
+                                memory.InstancesInScene.AddRange(returnedInstances);
+                                associateIsRelevant = true;
+                            }
+                            if (!associateIsRelevant) { referencedSimulationConstruct.Remove(referencedSimulationConstruct[0]); }
+                            else guidanceRecieved = true;
+                        }
+                        if (guidanceRecieved && nextStepCondition) { StepReverse(); break; }
+                    }
+
                     if (!nextStepCondition) break;
                     if (failedToFindInstance)
                     {
@@ -125,7 +160,8 @@ public class ExperienceStep// : ScriptableObject
                     else StepComplete();
                 }
                 break;
-            case ExperienceStepType.FindInstanceofEntityWithMemory: // Takes memory input, Return closest instance and position
+            case ExperienceStepType.FindInstanceofEntityWithMemory: // Takes memory input, Return closest instance and position.
+                // If there are no instances recorded, friend data is searched for friends to consult.
                 {
                     // Add sequence compatability for referencing sources of knowlege should the present samples prove non-effective, like other SimulationConstructs
 
@@ -157,14 +193,24 @@ public class ExperienceStep// : ScriptableObject
                         }
 
                         if (!referencedGameObject.Contains(kvp.Key)) relevantEntities.Add(kvp.Key);
+                        if (memory.IsAutonomous) continue;
                         if (!referencedVector3.Contains(kvp.Value)) relevantPositions.Add(kvp.Value);
                     }
 
                     // If no relevant entities can be found, search friends.
                     if (relevantEntities.Count <= 0 || relevantPositions.Count <= 0)
                     {
+                        if(referencedSimulationConstruct.Count <= 0) 
+                        foreach (SimulationConstructProfile profile in stepActor.KnownOthers)
+                        {
+                            if (!profile.IsFriend()) continue;
+                            // The below is arguably not needed but should reduce overall processing.
+                            if (profile.AssociatedSimulationConstruct.RequestMemoryKnowledge(stepActor, relevantMemories[0].EntityType) != null) continue;
 
-                    }
+                            if(!referencedSimulationConstruct.Contains(profile.AssociatedSimulationConstruct)) referencedSimulationConstruct.Add(profile.AssociatedSimulationConstruct);
+                            // referencedGameObject.Add(profile.AssociatedSimulationConstruct.gameObject);
+                        }
+                    } else { referencedSimulationConstruct.Clear(); }
 
                     // Add the appropriate ranges.
                     referencedGameObject.AddRange(relevantEntities);
@@ -217,11 +263,13 @@ public class ExperienceStep// : ScriptableObject
                     StepComplete();
                 }
                 break;
-            case ExperienceStepType.MoveToInstanceofEntityInMemory: // Intended to follow find instance of entitiy in memory.
+            case ExperienceStepType.MoveToInstanceofEntityInMemory: // Takes Vector3 OR Gameobject OR SimulationConstruct
+                // Intended to follow find instance of entitiy in memory.
                 // Not necessarily required to follow it, though.
+                // 
                 {
-                    // If no Vector3s are defined, one is pulled manually
-                    if (referencedVector3.Count == 0)
+                    // If no Vector3s or GameObjects are defined, one is pulled manually.
+                    if (referencedVector3.Count == 0 && referencedGameObject.Count == 0)
                     {
                         Execute(ExperienceStepType.FindInstanceofEntityWithMemory, false);
                     }
@@ -233,11 +281,22 @@ public class ExperienceStep// : ScriptableObject
                     if (referencedVector3.Count > 0)
                     {
                         stepActor.DestinationReachedEvent.RemoveAllListeners();
-                        //Debug.Log("Waiting for object to reach location: " + referencedVector3[0].x + " : " + referencedVector3[0].y + " : " + referencedVector3[0].z);
                         stepActor.NavigateAgentToPosition(referencedVector3[0]);
                         stepActor.DestinationReachedEvent.AddListener(ReachDestinationStepCompleteWithVector3);
                     }
-                    else Execute(stepType, true);
+                    else if (referencedSimulationConstruct.Count > 0) // Otherwise, uses friend data.
+                    {
+                        stepActor.DestinationReachedEvent.RemoveAllListeners();
+                        stepActor.NavigateAgentToPosition(referencedSimulationConstruct[0].gameObject);
+                        stepActor.DestinationReachedEvent.AddListener(ReachDestinationStepCompleteWithVector3);
+                    }
+                    else if (referencedGameObject.Count > 0) // Otherwise, uses the GameObject which is should only occur with AUTONOMOUS memories.
+                    {
+                        stepActor.DestinationReachedEvent.RemoveAllListeners();
+                        stepActor.NavigateAgentToPosition(referencedGameObject[0]);
+                        stepActor.DestinationReachedEvent.AddListener(ReachDestinationStepCompleteWithVector3);
+                    }
+                    else Execute(stepType, true); // It shouldn't ever reach this spot since if there are no referenced simulation constructs, it recycles.
                 }
                 break;
             case ExperienceStepType.ExploreUntilFindSomethingNew: // Forces the SimulationConstruct to wander until it finds something new.
@@ -353,6 +412,18 @@ public class ExperienceStep// : ScriptableObject
                     }
                     if (!nextStepCondition) break;
                     StepComplete();
+                }
+                break;
+            case ExperienceStepType.FindSimulationConstructWithPhysicalAttributeChange: // Optionally takes a passed EntityPhysicalAttributes, otherwise defaults to distance.
+                // Returns most viable entity.
+                {
+
+                }
+                break;
+            case ExperienceStepType.FindSimulationConstructWithTraitChange: // Optionally takes a passed EntityTraits, otherwise defaults to distance.
+                // Returns most viable entity.
+                {
+
                 }
                 break;
             case ExperienceStepType.CompleteExperienceStepSequence: // Suspends experience until immbedded sequence concludes.

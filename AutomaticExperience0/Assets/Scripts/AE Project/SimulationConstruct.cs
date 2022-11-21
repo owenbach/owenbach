@@ -108,12 +108,14 @@ public class SimulationConstruct : MonoBehaviour
     #region Navigation Actions
     public void NavigateAgentToPosition(Vector3 target)
     {
-        StartCoroutine(ProcessNavigation(target));
+        StartCoroutine(ProcessNavigationToPosition(target));
     }
-    public IEnumerator ProcessNavigation(Vector3 target)
+    public void NavigateAgentToPosition(GameObject target)
     {
-        //if (navMeshAgent.hasPath) navMeshAgent.path = null;
-
+        StartCoroutine(ProcessNavigationToPosition(target));
+    }
+    public IEnumerator ProcessNavigationToPosition(Vector3 target)
+    {
         navMeshAgent.SetDestination(target);
         navMeshAgent.autoTraverseOffMeshLink = true;
 
@@ -126,7 +128,25 @@ public class SimulationConstruct : MonoBehaviour
         destinationReachedEvent.Invoke(target);
         actionCompletedEvent.Invoke(true);
 
-        StopCoroutine(ProcessNavigation(target));
+        StopCoroutine(ProcessNavigationToPosition(target));
+
+        yield break;
+    }
+    public IEnumerator ProcessNavigationToPosition(GameObject target)
+    {
+        navMeshAgent.SetDestination(target.transform.position);
+        navMeshAgent.autoTraverseOffMeshLink = true;
+
+        Debug.DrawLine(transform.position, target.transform.position, Color.green, 2.5f);
+
+        yield return new WaitForFixedUpdate();
+
+        yield return new WaitUntil(() => navMeshAgent.remainingDistance <= 0.1f); //  Vector3.Distance(transform.position, target) <= 0.5f);
+
+        destinationReachedEvent.Invoke(target.transform.position);
+        actionCompletedEvent.Invoke(true);
+
+        StopCoroutine(ProcessNavigationToPosition(target));
 
         yield break;
     }
@@ -449,7 +469,11 @@ public class SimulationConstruct : MonoBehaviour
     #endregion
 
     #region Simulation Construct Interactions
-
+    /// <summary>
+    /// Get the profile of the select construct from memory. If a profile does not exist, one is created automatically.
+    /// </summary>
+    /// <param name="other"></param>
+    /// <returns></returns>
     public SimulationConstructProfile GetProfileReference(SimulationConstruct other)
     {
         foreach (SimulationConstructProfile subject in knownOthers)
@@ -463,6 +487,11 @@ public class SimulationConstruct : MonoBehaviour
         knownOthers.Add(newProfile);
         return newProfile;
     }
+    /// <summary>
+    /// Function called by a different simulation construct to identify this construct as a friend.
+    /// </summary>
+    /// <param name="other"></param>
+    /// <returns></returns>
     public bool Greet(SimulationConstruct other)
     {
         SimulationConstructProfile profile = GetProfileReference(other);
@@ -473,6 +502,12 @@ public class SimulationConstruct : MonoBehaviour
         }
         return false;
     }
+    /// <summary>
+    /// Returns the memory of an associated type, if it exists within this construct's memory.
+    /// </summary>
+    /// <param name="other"></param>
+    /// <param name="type"></param>
+    /// <returns></returns>
     public EntityMemory RequestMemoryKnowledge(SimulationConstruct other, System.Type type)
     {
         SimulationConstructProfile profile = GetProfileReference(other);
@@ -486,6 +521,12 @@ public class SimulationConstruct : MonoBehaviour
         }
         return null;
     }
+    /// <summary>
+    /// Returns the instances of the associated type memory, if it exists within this construct's memory.
+    /// </summary>
+    /// <param name="other"></param>
+    /// <param name="type"></param>
+    /// <returns></returns>
     public Dictionary<GameObject, Vector3> RequestInstanceKnowledge(SimulationConstruct other, System.Type type)
     {
         Dictionary<GameObject, Vector3> toReturn = new Dictionary<GameObject, Vector3>();
@@ -503,6 +544,34 @@ public class SimulationConstruct : MonoBehaviour
         }
         return toReturn;
     }
+    /// <summary>
+    /// Returns the trait of this construct.
+    /// </summary>
+    /// <param name="other"></param>
+    /// <param name="name"></param>
+    /// <returns></returns>
+    public TraitDataValue RequestTraitDataValue(SimulationConstruct other, TraitNames name)
+    {
+        TraitDataValue value = new TraitDataValue(name, 0);
+        SimulationConstructProfile profile = GetProfileReference(other);
+        if (!profile.IsFriend()) value = constructTraits.GetTrait(name);
+        return value;
+    }
+    /// <summary>
+    /// Returns the physical attribute of this construct.
+    /// </summary>
+    /// <param name="other"></param>
+    /// <param name="name"></param>
+    /// <returns></returns>
+    public PhysicalAttributeDataValue RequestPhysicalAttributeDataValue(SimulationConstruct other, PhysicalAttributeNames name)
+    {
+        PhysicalAttributeDataValue value = new PhysicalAttributeDataValue(name, 0);
+        SimulationConstructProfile profile = GetProfileReference(other);
+        if (!profile.IsFriend()) value = constructPhysicalAttributes.GetPhysicalAttribute(name);
+        return value;
+    }
+
+
 
     #endregion
 

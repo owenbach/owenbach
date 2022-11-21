@@ -23,7 +23,12 @@ public class SimulationConstructProfile
     #region Utility
     public bool IsFriend()
     {
-        if (assumedTraits.GetTrait(TraitNames.friend).Intensity > 0) return true;
+        if (assumedTraits.GetTrait(TraitNames.friend).Intensity >= assumedTraits.GetTrait(TraitNames.enemy).Intensity) return true;
+        return false;
+    }
+    public bool IsCandidateForFriendship()
+    {
+        if (assumedTraits.GetTrait(TraitNames.friend).Intensity == 0 && assumedTraits.GetTrait(TraitNames.friend).Intensity >= assumedTraits.GetTrait(TraitNames.enemy).Intensity) return true;
         return false;
     }
     #endregion

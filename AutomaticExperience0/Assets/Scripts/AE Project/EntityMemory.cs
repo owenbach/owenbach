@@ -19,6 +19,7 @@ public class EntityMemory
     [SerializeField] EntityPhysicalAttributes assumedPhysicalAttributes;
     [SerializeField] List<EntityEventMemory> performableInteractions = new List<EntityEventMemory>();
     EntityEventMemoryEvent finishedExecutingEvent = new EntityEventMemoryEvent();
+    bool isAutonomous = false; // If true, this memory is known for not sticking to one location, and will frequently relocate.
     #endregion
 
     #region Properties
@@ -30,6 +31,7 @@ public class EntityMemory
     public EntityPhysicalAttributes AssumedPhysicalAttributes { get => assumedPhysicalAttributes; set => assumedPhysicalAttributes = value;  }
     public List<EntityEventMemory> PerformableInteractions { get => performableInteractions; set => performableInteractions = value; }
     public EntityEventMemoryEvent FinishedExecutingEvent { get => finishedExecutingEvent; set => finishedExecutingEvent = value; }
+    public bool IsAutonomous { get => isAutonomous; set => isAutonomous = value; }
     #endregion
 
     #region Utility
@@ -88,9 +90,19 @@ public class EntityMemory
     {
         if (instancesInScene.Count <= 0) return new KeyValuePair<GameObject, Vector3>(null, Vector3.zero);
         KeyValuePair<GameObject, Vector3> chosenInstance = instancesInScene.ToArray()[0];
-        foreach (KeyValuePair<GameObject, Vector3> pair in instancesInScene)
+        if (IsAutonomous)
         {
-            if (Vector3.Distance(memoryHolder.transform.position, pair.Value) <= Vector3.Distance(memoryHolder.transform.position, chosenInstance.Value)) { chosenInstance = pair; }
+            foreach (KeyValuePair<GameObject, Vector3> pair in instancesInScene)
+            {
+                if (Vector3.Distance(memoryHolder.transform.position, pair.Key.transform.position) <= Vector3.Distance(memoryHolder.transform.position, chosenInstance.Key.transform.position)) { chosenInstance = pair; }
+            }
+        }
+        else
+        {
+            foreach (KeyValuePair<GameObject, Vector3> pair in instancesInScene)
+            {
+                if (Vector3.Distance(memoryHolder.transform.position, pair.Value) <= Vector3.Distance(memoryHolder.transform.position, chosenInstance.Value)) { chosenInstance = pair; }
+            }
         }
         return chosenInstance;
     }
