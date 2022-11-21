@@ -57,13 +57,15 @@
     <Compile Include="Assets\Scripts\AE Project\EntityEventMemory.cs" />
     <Compile Include="Assets\Scripts\AE Project\Traits\EntityTraits.cs" />
     <Compile Include="Assets\Scripts\AE Project\SimulationConstruct.cs" />
-    <Compile Include="Assets\Scripts\AE Project\PhysicalAttributes\PhysicalAttributeDataValue.cs" />
-    <Compile Include="Assets\Scripts\AE Project\EntityMemory.cs" />
-    <Compile Include="Assets\Scripts\AE Project\ExperienceMemory.cs" />
-    <Compile Include="Assets\Scripts\AE Project\PhysicalAttributes\EntityPhysicalAttributes.cs" />
-    <Compile Include="Assets\Scripts\AE Project\EntityMemoryManager.cs" />
     <Compile Include="Assets\Scripts\AE Project\Interactables\SimulationConstructFood.cs" />
     <Compile Include="Assets\Scripts\AE Project\VacentScript.cs" />
+    <Compile Include="Assets\Scripts\AE Project\PhysicalAttributes\PhysicalAttributeDataValue.cs" />
+    <Compile Include="Assets\Scripts\AE Project\EntityMemory.cs" />
+    <Compile Include="Assets\Scripts\AE Project\PhysicalAttributes\EntityPhysicalAttributes.cs" />
+    <Compile Include="Assets\Scripts\AE Project\ExperienceStepSequence.cs" />
+    <Compile Include="Assets\Scripts\AE Project\EntityMemoryManager.cs" />
+    <Compile Include="Assets\Scripts\AE Project\ExperienceStep.cs" />
+    <Compile Include="Assets\Scripts\AE Project\SimulationConstructProfile.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UnityEngine">

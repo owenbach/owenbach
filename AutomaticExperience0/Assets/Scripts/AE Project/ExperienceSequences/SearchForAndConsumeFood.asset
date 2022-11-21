@@ -1,0 +1,119 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: baf9dff4b9e44ea43a45e4bdcc4b54aa, type: 3}
+  m_Name: SearchForAndConsumeFood
+  m_EditorClassIdentifier: 
+  sequencePriority: 10
+  traitChange:
+    meritData: []
+  physicalAttributeChange:
+    meritData:
+    - nameAsEnum: 3
+      intensity: 1
+  currentStep:
+    stepType: 0
+    referencedSimulationConstruct: []
+    referencedEntityMemory: []
+    referencedEntityEventMemory: []
+    referencedGameObject: []
+    referencedExperienceStepSequence: []
+    referencedTraits:
+      meritData: []
+    referencedPhysicalAttributes:
+      meritData: []
+    referencedVector3: []
+    referencedString: []
+  sequenceSteps:
+  - stepType: 10
+    referencedSimulationConstruct: []
+    referencedEntityMemory: []
+    referencedEntityEventMemory: []
+    referencedGameObject: []
+    referencedExperienceStepSequence: []
+    referencedTraits:
+      meritData: []
+    referencedPhysicalAttributes:
+      meritData:
+      - nameAsEnum: 3
+        intensity: 5
+    referencedVector3: []
+    referencedString: []
+  - stepType: 3
+    referencedSimulationConstruct: []
+    referencedEntityMemory: []
+    referencedEntityEventMemory: []
+    referencedGameObject: []
+    referencedExperienceStepSequence: []
+    referencedTraits:
+      meritData: []
+    referencedPhysicalAttributes:
+      meritData:
+      - nameAsEnum: 3
+        intensity: 1
+    referencedVector3: []
+    referencedString: []
+  - stepType: 5
+    referencedSimulationConstruct: []
+    referencedEntityMemory: []
+    referencedEntityEventMemory: []
+    referencedGameObject: []
+    referencedExperienceStepSequence: []
+    referencedTraits:
+      meritData: []
+    referencedPhysicalAttributes:
+      meritData:
+      - nameAsEnum: 3
+        intensity: 1
+    referencedVector3: []
+    referencedString: []
+  - stepType: 2
+    referencedSimulationConstruct: []
+    referencedEntityMemory: []
+    referencedEntityEventMemory: []
+    referencedGameObject: []
+    referencedExperienceStepSequence: []
+    referencedTraits:
+      meritData: []
+    referencedPhysicalAttributes:
+      meritData:
+      - nameAsEnum: 3
+        intensity: 1
+    referencedVector3: []
+    referencedString: []
+  - stepType: 7
+    referencedSimulationConstruct: []
+    referencedEntityMemory: []
+    referencedEntityEventMemory: []
+    referencedGameObject: []
+    referencedExperienceStepSequence: []
+    referencedTraits:
+      meritData: []
+    referencedPhysicalAttributes:
+      meritData:
+      - nameAsEnum: 3
+        intensity: 1
+    referencedVector3: []
+    referencedString: []
+  - stepType: 4
+    referencedSimulationConstruct: []
+    referencedEntityMemory: []
+    referencedEntityEventMemory: []
+    referencedGameObject: []
+    referencedExperienceStepSequence: []
+    referencedTraits:
+      meritData: []
+    referencedPhysicalAttributes:
+      meritData:
+      - nameAsEnum: 3
+        intensity: 1
+    referencedVector3: []
+    referencedString: []

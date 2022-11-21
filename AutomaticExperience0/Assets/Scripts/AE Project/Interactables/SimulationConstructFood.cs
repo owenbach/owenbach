@@ -15,8 +15,11 @@ public class SimulationConstructFood : MonoBehaviour
     {
         
     }
-    public void Consume()
+    public void Consume(SimulationConstruct construct, EntityMemory associatedMemory)
     {
-
+        associatedMemory.InstancesInScene.Remove(gameObject);
+        construct.ConstructPhysicalAttributes.GetPhysicalAttribute(PhysicalAttributeNames.hunger).Intensity += 25;
+        construct.RemoveGameObjectFromInventory(gameObject);
+        Destroy(gameObject);
     }
 }

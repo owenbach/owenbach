@@ -7,10 +7,10 @@ using UnityEngine.Events;
 public class EntityEventMemory
 {
     #region Fields
-    string name = "";
+    [SerializeField] string name = "";
     System.Reflection.MethodInfo functionMethodInfo;
-    EntityTraits traitChange;
-    EntityPhysicalAttributes physicalAttributeChange;
+    [SerializeField] EntityTraits traitChange;
+    [SerializeField] EntityPhysicalAttributes physicalAttributeChange;
     #endregion
     #region Properties
     public string Name { get => name; set => name = value; }
@@ -19,3 +19,4 @@ public class EntityEventMemory
     public EntityPhysicalAttributes PhysicalAttributeChange { get => physicalAttributeChange; set => physicalAttributeChange = value; }
     #endregion
 }
+public class EntityEventMemoryEvent : UnityEvent<EntityEventMemory> { }

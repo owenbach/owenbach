@@ -1,5 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using UnityEditor.VersionControl;
 using UnityEngine;
 /*
  * Two types of merits:
@@ -18,37 +20,36 @@ public class EntityTraits
     public static EntityTraits GenerateDefaultTraits()
     {
         EntityTraits meritToReturn = new EntityTraits();
-        meritToReturn.meritData.Add(new TraitDataValue(TraitDataValue.TraitNames.creativity, 5));
-        meritToReturn.meritData.Add(new TraitDataValue(TraitDataValue.TraitNames.curiosity, 5));
+        meritToReturn.meritData.Add(new TraitDataValue(TraitNames.adventurous, 5));
+        meritToReturn.meritData.Add(new TraitDataValue(TraitNames.curious, 5));
         return meritToReturn;
     }
     #region Utilities
     public static EntityTraits GenerateTraitDifference(EntityTraits original, EntityTraits changes)
     {
         EntityTraits toReturn = new EntityTraits();
-        foreach (TraitDataValue trait in original.MeritData)
+        foreach (TraitDataValue subject in original.MeritData)
         {
-            toReturn.MeritData.Add(trait);
+            TraitDataValue newTrait = new TraitDataValue(subject.NameAsEnum, changes.MeritData[original.MeritData.IndexOf(subject)].Intensity - subject.Intensity);
+            toReturn.MeritData.Add(newTrait);
         }
-        EntityTraits toRemove = new EntityTraits();
-        foreach (TraitDataValue trait in toReturn.MeritData)
+        return toReturn;
+    }
+    public TraitDataValue GetTrait(TraitNames inputtedNameAsEnum)
+    {
+        TraitDataValue attribute = null;
+        foreach (TraitDataValue value in meritData)
         {
-            if (!changes.MeritData.Contains(trait)) { toRemove.MeritData.Remove(trait); }
+            if (value.NameAsEnum == inputtedNameAsEnum) attribute = value;
         }
-        foreach (TraitDataValue trait in toRemove.MeritData)
+        return attribute;
+    }
+    public static EntityTraits CopyTraits(EntityTraits original)
+    {
+        EntityTraits toReturn = new EntityTraits();
+        foreach (TraitDataValue subject in original.MeritData)
         {
-            toReturn.MeritData.Remove(trait);
-        }
-        toReturn.MeritData.Sort();
-        changes.MeritData.Sort();
-        foreach (TraitDataValue trait in changes.MeritData)
-        {
-            if (!toReturn.MeritData.Contains(trait)) { toReturn.MeritData.Add(trait); toReturn.MeritData.Sort(); }
-            else
-            {
-                changes.MeritData.IndexOf(trait);
-                toReturn.MeritData[changes.MeritData.IndexOf(trait)].Intensity = trait.Intensity - toReturn.MeritData[changes.MeritData.IndexOf(trait)].Intensity;
-            }
+            toReturn.MeritData.Add(new TraitDataValue(subject.NameAsEnum, subject.Intensity));
         }
         return toReturn;
     }

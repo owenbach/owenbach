@@ -1,8 +1,11 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
+using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.Events;
 
 [System.Serializable]
 public class EntityMemory
@@ -14,8 +17,8 @@ public class EntityMemory
     [SerializeField] Dictionary<GameObject, Vector3> instancesInScene = new Dictionary<GameObject, Vector3>();
     [SerializeField] EntityTraits assumedTraits;
     [SerializeField] EntityPhysicalAttributes assumedPhysicalAttributes;
-
     [SerializeField] List<EntityEventMemory> performableInteractions = new List<EntityEventMemory>();
+    EntityEventMemoryEvent finishedExecutingEvent = new EntityEventMemoryEvent();
     #endregion
 
     #region Properties
@@ -23,10 +26,10 @@ public class EntityMemory
     public float CreationTime { get => creationTime; set => creationTime = value; }
     public SimulationConstruct MemoryHolder { get => memoryHolder; set => memoryHolder = value; }
     public Dictionary<GameObject, Vector3> InstancesInScene { get => instancesInScene; set => instancesInScene = value; }
-    // public List<ExperienceMemory> AssociatedMemories { get => associatedMemories; set => associatedMemories = value; }
     public EntityTraits AssumedTraits { get => assumedTraits; set => assumedTraits = value; }
     public EntityPhysicalAttributes AssumedPhysicalAttributes { get => assumedPhysicalAttributes; set => assumedPhysicalAttributes = value;  }
     public List<EntityEventMemory> PerformableInteractions { get => performableInteractions; set => performableInteractions = value; }
+    public EntityEventMemoryEvent FinishedExecutingEvent { get => finishedExecutingEvent; set => finishedExecutingEvent = value; }
     #endregion
 
     #region Utility
@@ -50,26 +53,56 @@ public class EntityMemory
     }
     public void ExecuteEntityEventMemory(GameObject instance, EntityEventMemory memory)
     {
-        if (!performableInteractions.Contains(memory)) return;
-        if (!instancesInScene.ContainsKey(instance)) return;
-        EntityTraits originalTraits = memoryHolder.ConstructTraits;
-        EntityPhysicalAttributes originalPhysicalAttributes = memoryHolder.ConstructPhysicalAttributes;
+        memoryHolder.StartCoroutine(ReviewEntityEventMemory(instance, memory));
+    }
+    public IEnumerator ReviewEntityEventMemory(GameObject instance, EntityEventMemory memory)
+    {
+        if (!performableInteractions.Contains(memory)) yield break;
+        if (!instancesInScene.ContainsKey(instance)) yield break;
+        EntityTraits originalTraits = EntityTraits.CopyTraits(memoryHolder.ConstructTraits);
+        EntityPhysicalAttributes originalPhysicalAttributes = EntityPhysicalAttributes.CopyPhysicalAttributes(memoryHolder.ConstructPhysicalAttributes);
 
-        List<object> inputParameters = new List<object>();
-        List<System.Reflection.ParameterInfo> generatedParameterInfo = memory.FunctionMethodInfo.GetParameters().ToList<System.Reflection.ParameterInfo>();
+        
+        System.Reflection.ParameterInfo[] generatedParameterInfo = memory.FunctionMethodInfo.GetParameters();
+        object[] inputParameters = new object[generatedParameterInfo.Count()];
+        int count = 0;
         foreach (System.Reflection.ParameterInfo parameter in generatedParameterInfo)
         {
-            if (parameter.ParameterType == typeof(SimulationConstruct)) inputParameters.Add(memoryHolder);
-            if (parameter.ParameterType == typeof(EntityMemory)) inputParameters.Add(this);
+            if (parameter.ParameterType == typeof(SimulationConstruct)) inputParameters[count] = (memoryHolder);
+            if (parameter.ParameterType == typeof(EntityMemory)) inputParameters[count] = (this);
+            if (parameter.ParameterType == typeof(EntityTraits)) inputParameters[count] = (memoryHolder.ConstructTraits);
+            if (parameter.ParameterType == typeof(EntityPhysicalAttributes)) inputParameters[count] = (memoryHolder.ConstructPhysicalAttributes);
+            count++;
         }
-        memory.FunctionMethodInfo.Invoke(instance, inputParameters.ToArray());
+        memory.FunctionMethodInfo.Invoke(instance.GetComponent(entityType), inputParameters);
+        // memory.FunctionMethodInfo.InvokeOptimized(instance, inputParameters);
+
+        yield return new WaitForSeconds(1f);
+
         memory.TraitChange = EntityTraits.GenerateTraitDifference(originalTraits, memoryHolder.ConstructTraits);
         memory.PhysicalAttributeChange = EntityPhysicalAttributes.GeneratePhysicalAttributeDifference(originalPhysicalAttributes, memoryHolder.ConstructPhysicalAttributes);
-
+        finishedExecutingEvent.Invoke(memory);
+        yield break;
     }
-    public void VerifyPresenceOfInstanceInView(GameObject instance)
+    public KeyValuePair<GameObject, Vector3> FindClosestInstance()
     {
-        if (!memoryHolder.GameObjectView.Contains(instance) && instancesInScene.ContainsKey(instance)) instancesInScene.Remove(instance);
+        if (instancesInScene.Count <= 0) return new KeyValuePair<GameObject, Vector3>(null, Vector3.zero);
+        KeyValuePair<GameObject, Vector3> chosenInstance = instancesInScene.ToArray()[0];
+        foreach (KeyValuePair<GameObject, Vector3> pair in instancesInScene)
+        {
+            if (Vector3.Distance(memoryHolder.transform.position, pair.Value) <= Vector3.Distance(memoryHolder.transform.position, chosenInstance.Value)) { chosenInstance = pair; }
+        }
+        return chosenInstance;
+    }
+    public static EntityMemory FindMemoryofFunction(List<EntityMemory> memories, EntityEventMemory action)
+    {
+        EntityMemory memory = null;
+        foreach(EntityMemory mem in memories)
+        {
+            if (mem.PerformableInteractions.Contains(action)) memory = mem;
+        }
+        return memory;
     }
     #endregion
 }
+public class EntityMemoryEvent : UnityEvent<EntityMemory> { }
