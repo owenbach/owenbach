@@ -4,10 +4,6 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.Events;
-using UnityEditor;
-using System.Xml.Serialization;
-using static UnityEngine.EventSystems.EventTrigger;
-using UnityEditor.UIElements;
 
 [System.Serializable]
 public class SimulationConstruct : MonoBehaviour
@@ -256,6 +252,7 @@ public class SimulationConstruct : MonoBehaviour
     public ExperienceStepSequence GetMostEligableTraitSequence(EntityTraits filter)
     {
         List<TraitNames> positiveTargets = new List<TraitNames>();
+        List<TraitNames> neutralTargets = new List<TraitNames>();
         List<TraitNames> negativeTargets = new List<TraitNames>();
         Dictionary<ExperienceStepSequence, float> candidates = new Dictionary<ExperienceStepSequence, float>();
 
@@ -263,6 +260,7 @@ public class SimulationConstruct : MonoBehaviour
         {
             if (attribute.Intensity > 0) { positiveTargets.Add(attribute.NameAsEnum); }
             if (attribute.Intensity < 0) { negativeTargets.Add(attribute.NameAsEnum); }
+            if (attribute.Intensity == 0) { neutralTargets.Add(attribute.NameAsEnum); }
         }
         foreach (ExperienceStepSequence sequence in learnedConstructSequences)
         {
@@ -277,6 +275,11 @@ public class SimulationConstruct : MonoBehaviour
                 {
                     if (!candidates.ContainsKey(sequence)) candidates.Add(sequence, -attribute.Intensity);
                     else candidates[sequence] += -attribute.Intensity;
+                }
+                if (neutralTargets.Contains(attribute.NameAsEnum))
+                {
+                    if (!candidates.ContainsKey(sequence)) candidates.Add(sequence, attribute.Intensity);
+                    else candidates[sequence] += 1;
                 }
             }
         }
@@ -286,11 +289,13 @@ public class SimulationConstruct : MonoBehaviour
     public ExperienceStepSequence GetMostEligableTraitSequence(TraitDataValue filter)
     {
         List<TraitNames> positiveTargets = new List<TraitNames>();
+        List<TraitNames> neutralTargets = new List<TraitNames>();
         List<TraitNames> negativeTargets = new List<TraitNames>();
         Dictionary<ExperienceStepSequence, float> candidates = new Dictionary<ExperienceStepSequence, float>();
 
         if (filter.Intensity > 0) { positiveTargets.Add(filter.NameAsEnum); }
         if (filter.Intensity < 0) { negativeTargets.Add(filter.NameAsEnum); }
+        if (filter.Intensity == 0) { neutralTargets.Add(filter.NameAsEnum); }
 
         foreach (ExperienceStepSequence sequence in learnedConstructSequences)
         {
@@ -305,6 +310,11 @@ public class SimulationConstruct : MonoBehaviour
                 {
                     if (!candidates.ContainsKey(sequence)) candidates.Add(sequence, -attribute.Intensity);
                     else candidates[sequence] += -attribute.Intensity;
+                }
+                if (neutralTargets.Contains(attribute.NameAsEnum))
+                {
+                    if (!candidates.ContainsKey(sequence)) candidates.Add(sequence, attribute.Intensity);
+                    else candidates[sequence] += 1;
                 }
             }
         }
@@ -315,12 +325,14 @@ public class SimulationConstruct : MonoBehaviour
     {
         List<PhysicalAttributeNames> positiveTargets = new List<PhysicalAttributeNames>();
         List<PhysicalAttributeNames> negativeTargets = new List<PhysicalAttributeNames>();
+        List<PhysicalAttributeNames> neutralTargets = new List<PhysicalAttributeNames>();
         Dictionary<ExperienceStepSequence, float> candidates = new Dictionary<ExperienceStepSequence, float>();
 
         foreach (PhysicalAttributeDataValue attribute in filter.MeritData)
         {
             if (attribute.Intensity > 0) { positiveTargets.Add(attribute.NameAsEnum); }
             if (attribute.Intensity < 0) { negativeTargets.Add(attribute.NameAsEnum); }
+            if (attribute.Intensity == 0) { neutralTargets.Add(attribute.NameAsEnum); }
         }
         foreach (ExperienceStepSequence sequence in learnedConstructSequences)
         {
@@ -335,6 +347,11 @@ public class SimulationConstruct : MonoBehaviour
                 {
                     if (!candidates.ContainsKey(sequence)) candidates.Add(sequence, -attribute.Intensity);
                     else candidates[sequence] += -attribute.Intensity;
+                }
+                if (neutralTargets.Contains(attribute.NameAsEnum))
+                {
+                    if (!candidates.ContainsKey(sequence)) candidates.Add(sequence, attribute.Intensity);
+                    else candidates[sequence] += 1;
                 }
             }
         }
@@ -345,10 +362,12 @@ public class SimulationConstruct : MonoBehaviour
     {
         List<PhysicalAttributeNames> positiveTargets = new List<PhysicalAttributeNames>();
         List<PhysicalAttributeNames> negativeTargets = new List<PhysicalAttributeNames>();
+        List<PhysicalAttributeNames> neutralTargets = new List<PhysicalAttributeNames>();
         Dictionary<ExperienceStepSequence, float> candidates = new Dictionary<ExperienceStepSequence, float>();
 
         if (filter.Intensity > 0) { positiveTargets.Add(filter.NameAsEnum); }
         if (filter.Intensity < 0) { negativeTargets.Add(filter.NameAsEnum); }
+        if (filter.Intensity == 0) { neutralTargets.Add(filter.NameAsEnum); }
 
         foreach (ExperienceStepSequence sequence in learnedConstructSequences)
         {
@@ -363,6 +382,11 @@ public class SimulationConstruct : MonoBehaviour
                 {
                     if (!candidates.ContainsKey(sequence)) candidates.Add(sequence, -attribute.Intensity);
                     else candidates[sequence] += -attribute.Intensity;
+                }
+                if (neutralTargets.Contains(attribute.NameAsEnum))
+                {
+                    if (!candidates.ContainsKey(sequence)) candidates.Add(sequence, attribute.Intensity);
+                    else candidates[sequence] += 1;
                 }
             }
         }
